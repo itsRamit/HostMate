@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'utils/spacing.dart';
 
 class AppColors {
   // Base
@@ -6,29 +7,29 @@ class AppColors {
   static const base2 = Color(0xFF101010);
 
   // Surface
-  static const surfaceWhite1 = Color(0xFFFFFFFF);
-  static const surfaceWhite2 = Color(0xFFFFFFFF);
-  static const surfaceBlack1 = Color(0xFF101010);
-  static const surfaceBlack2 = Color(0xFF101010);
-  static const surfaceBlack3 = Color(0xFF101010);
+  static const surfaceWhite1 = Color(0x05FFFFFF); // 2% white overlay
+  static const surfaceWhite2 = Color(0x0DFFFFFF); // 5% white overlay
+  static const surfaceBlack1 = Color(0xFF101010); // 100%
+  static const surfaceBlack2 = Color(0xFF101010); // 90%
+  static const surfaceBlack3 = Color(0xFF101010); // 70%
 
-  // Text
+  // Text (with visual opacity levels)
   static const text1 = Color(0xFFFFFFFF); // 100%
-  static const text2 = Color(0xFFFFFFFF); // 72%
-  static const text3 = Color(0xFFFFFFFF); // 48%
-  static const text4 = Color(0xFFFFFFFF); // 24%
-  static const text5 = Color(0xFFFFFFFF); // 10%
+  static const text2 = Color(0xB8FFFFFF); // 72%
+  static const text3 = Color(0x7AFFFFFF); // 48%
+  static const text4 = Color(0x3DFFFFFF); // 24%
+  static const text5 = Color(0x26FFFFFF); // 15%
 
-  // Colors
+  // Accents & Status
   static const primaryAccent = Color(0xFF913BFF);
   static const secondaryAccent = Color(0xFF3B59FF);
   static const positive = Color(0xFF5BEB3B);
   static const negative = Color(0xFFD6274A);
 
   // Borders
-  static const border1 = Color(0xFFFFFFFF);
-  static const border2 = Color(0xFF1A1A1A);
-  static const border3 = Color(0xFF1F1F1F);
+  static const border1 = Color(0x14FFFFFF); // 8%
+  static const border2 = Color(0x1AFFFFFF); // 10%
+  static const border3 = Color(0x40FFFFFF); // 25%
 
   // Effects
   static const bgBlur12 = Color(0x1FFFFFFF);
@@ -37,28 +38,68 @@ class AppColors {
 }
 
 class AppTextStyles {
+  // Headings
   static const h1Bold = TextStyle(
     fontFamily: 'SpaceGrotesk',
     fontSize: 28,
     fontWeight: FontWeight.w700,
-    color: AppColors.text1,
     letterSpacing: -0.03,
-    height: 1.2,
+    height: 1.25,
+    color: AppColors.text1,
+  );
+
+  static const h1Regular = TextStyle(
+    fontFamily: 'SpaceGrotesk',
+    fontSize: 28,
+    fontWeight: FontWeight.w400,
+    letterSpacing: -0.03,
+    height: 1.25,
+    color: AppColors.text2,
   );
 
   static const h2Bold = TextStyle(
     fontFamily: 'SpaceGrotesk',
     fontSize: 24,
     fontWeight: FontWeight.w700,
-    color: AppColors.text1,
     letterSpacing: -0.02,
     height: 1.25,
+    color: AppColors.text1,
   );
 
+  static const h2Regular = TextStyle(
+    fontFamily: 'SpaceGrotesk',
+    fontSize: 24,
+    fontWeight: FontWeight.w400,
+    letterSpacing: -0.02,
+    height: 1.25,
+    color: AppColors.text2,
+  );
+
+  static const h3Bold = TextStyle(
+    fontFamily: 'SpaceGrotesk',
+    fontSize: 20,
+    fontWeight: FontWeight.w700,
+    letterSpacing: -0.01,
+    height: 1.3,
+    color: AppColors.text1,
+  );
+
+  static const h3Regular = TextStyle(
+    fontFamily: 'SpaceGrotesk',
+    fontSize: 20,
+    fontWeight: FontWeight.w400,
+    letterSpacing: -0.01,
+    height: 1.3,
+    color: AppColors.text2,
+  );
+
+  // Body
   static const bodyMRegular = TextStyle(
     fontFamily: 'SpaceGrotesk',
     fontSize: 16,
     fontWeight: FontWeight.w400,
+    height: 1.5,
+    letterSpacing: 0,
     color: AppColors.text2,
   );
 
@@ -66,6 +107,8 @@ class AppTextStyles {
     fontFamily: 'SpaceGrotesk',
     fontSize: 16,
     fontWeight: FontWeight.w700,
+    height: 1.5,
+    letterSpacing: 0,
     color: AppColors.text1,
   );
 
@@ -73,18 +116,51 @@ class AppTextStyles {
     fontFamily: 'SpaceGrotesk',
     fontSize: 14,
     fontWeight: FontWeight.w400,
+    height: 1.4,
+    letterSpacing: 0,
     color: AppColors.text3,
+  );
+
+  static const bodySBold = TextStyle(
+    fontFamily: 'SpaceGrotesk',
+    fontSize: 14,
+    fontWeight: FontWeight.w700,
+    height: 1.4,
+    letterSpacing: 0,
+    color: AppColors.text1,
+  );
+
+  // Subtext / labels
+  static const subTextRegular = TextStyle(
+    fontFamily: 'SpaceGrotesk',
+    fontSize: 12,
+    fontWeight: FontWeight.w400,
+    height: 1.33,
+    letterSpacing: 0,
+    color: AppColors.text3,
+  );
+
+  static const subTextBold = TextStyle(
+    fontFamily: 'SpaceGrotesk',
+    fontSize: 12,
+    fontWeight: FontWeight.w700,
+    height: 1.33,
+    letterSpacing: 0,
+    color: AppColors.text1,
   );
 }
 
-final appTheme = ThemeData(
+final ThemeData appTheme = ThemeData(
   brightness: Brightness.dark,
   scaffoldBackgroundColor: AppColors.base2,
+  primaryColor: AppColors.primaryAccent,
   textTheme: const TextTheme(
+    displayLarge: AppTextStyles.h1Bold,
+    displayMedium: AppTextStyles.h2Bold,
+    headlineMedium: AppTextStyles.h3Bold,
     bodyLarge: AppTextStyles.bodyMRegular,
     bodyMedium: AppTextStyles.bodySRegular,
-    headlineMedium: AppTextStyles.h2Bold,
-    headlineLarge: AppTextStyles.h1Bold,
+    labelSmall: AppTextStyles.subTextRegular,
   ),
   inputDecorationTheme: InputDecorationTheme(
     filled: true,
