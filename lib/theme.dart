@@ -21,8 +21,8 @@ class AppColors {
   static const text5 = Color(0x26FFFFFF); // 15%
 
   // Accents & Status
-  static const primaryAccent = Color(0xFF913BFF);
-  static const secondaryAccent = Color(0xFF3B59FF);
+  static const primaryAccent = Color(0xFF9196FF);
+  static const secondaryAccent = Color(0xFF5961FF);
   static const positive = Color(0xFF5BEB3B);
   static const negative = Color(0xFFD6274A);
 

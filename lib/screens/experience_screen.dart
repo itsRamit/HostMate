@@ -17,12 +17,12 @@ class GradientNextButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final gradient = enabled
         ? const LinearGradient(
-            colors: [Color(0x33FFFFFF), Color(0x11FFFFFF)],
+            colors: [Color(0x07070707),Color.fromARGB(54, 255, 255, 255), Color(0x07070707)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           )
         : const LinearGradient(
-            colors: [Color(0x15FFFFFF), Color(0x07070707)],
+            colors: [Color(0x07070707), Color(0x15FFFFFF), Color(0x07070707)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           );
