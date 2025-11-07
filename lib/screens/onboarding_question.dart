@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
@@ -88,7 +87,10 @@ class _OnboardingQuestionScreenState
     await _recorder.stop(false);
     _ticker?.cancel();
     if (_audioPath != null) {
-      await _player.preparePlayer(path: _audioPath!, shouldExtractWaveform: true);
+      await _player.preparePlayer(
+        path: _audioPath!,
+        shouldExtractWaveform: true,
+      );
     }
     if (!mounted) return;
     setState(() => _isRecordingAudio = false);
@@ -132,8 +134,11 @@ class _OnboardingQuestionScreenState
     if (!camPerm.isGranted || !micPerm.isGranted) return;
     final cams = await availableCameras();
     if (cams.isEmpty) return;
-    final controller =
-        CameraController(cams.first, ResolutionPreset.medium, enableAudio: true);
+    final controller = CameraController(
+      cams.first,
+      ResolutionPreset.medium,
+      enableAudio: true,
+    );
     await controller.initialize();
     if (!mounted) {
       await controller.dispose();
@@ -150,7 +155,9 @@ class _OnboardingQuestionScreenState
 
   Future<void> _stopVideoRecording() async {
     final ctrl = _cameraController;
-    if (ctrl == null || !ctrl.value.isInitialized || !ctrl.value.isRecordingVideo) {
+    if (ctrl == null ||
+        !ctrl.value.isInitialized ||
+        !ctrl.value.isRecordingVideo) {
       return;
     }
     final xfile = await ctrl.stopVideoRecording();
@@ -217,7 +224,7 @@ class _OnboardingQuestionScreenState
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const StepperBar(),
+        title: const StepperBar(progress: 0.66,),
         centerTitle: true,
         actions: [
           IconButton(
@@ -248,8 +255,10 @@ class _OnboardingQuestionScreenState
                     children: [
                       const Text('02', style: AppTextStyles.bodySRegular),
                       const SizedBox(height: 8),
-                      const Text('Why do you want to host with us?',
-                          style: AppTextStyles.h2Bold),
+                      const Text(
+                        'Why do you want to host with us?',
+                        style: AppTextStyles.h2Bold,
+                      ),
                       const SizedBox(height: 6),
                       const Text(
                         'Tell us about your intent and what motivates you to create experiences.',
@@ -261,8 +270,9 @@ class _OnboardingQuestionScreenState
                         maxLines: 6,
                         maxLength: 600,
                         style: AppTextStyles.bodyMRegular,
-                        decoration:
-                            const InputDecoration(hintText: '/ Start typing here'),
+                        decoration: const InputDecoration(
+                          hintText: '/ Start typing here',
+                        ),
                       ),
                       const SizedBox(height: 18),
                       if (_isRecordingAudio || _audioPath != null)
@@ -291,38 +301,81 @@ class _OnboardingQuestionScreenState
                       const SizedBox(height: 20),
                       Row(
                         children: [
-                          ActionIconButton(
-                            icon: _isRecordingAudio ? Icons.stop : Icons.mic,
-                            tooltip: _isRecordingAudio
-                                ? 'Stop Audio'
-                                : 'Record Audio',
-                            active: !_isRecordingVideo && _videoPath == null,
-                            onTap: () async {
-                              if (_isRecordingAudio) {
-                                await _stopAudioRecording();
-                              } else {
-                                await _startAudioRecording();
-                              }
-                            },
+                          Expanded(
+                            child: Container(
+                              height: h*0.08,
+                              decoration: BoxDecoration(
+                                color: AppColors.surfaceBlack2,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: AppColors.border3,
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: InkWell(
+                                      onTap:
+                                          (!_isRecordingVideo &&
+                                              _videoPath == null)
+                                          ? () async {
+                                              if (_isRecordingAudio) {
+                                                await _stopAudioRecording();
+                                              } else {
+                                                await _startAudioRecording();
+                                              }
+                                            }
+                                          : null,
+                                      borderRadius: BorderRadius.circular(16),
+                                      child: Center(
+                                        child: Icon(
+                                          _isRecordingAudio
+                                              ? Icons.stop_rounded
+                                              : Icons.mic_none_rounded,
+                                          color: Colors.white,
+                                          size: 24,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    width: 1,
+                                    height: 24,
+                                    color: Colors.white.withOpacity(0.2),
+                                  ),
+                                  Expanded(
+                                    child: InkWell(
+                                      onTap:
+                                          (!_isRecordingAudio &&
+                                              _audioPath == null)
+                                          ? () async {
+                                              if (_isRecordingVideo) {
+                                                await _stopVideoRecording();
+                                              } else {
+                                                await _startVideoRecording();
+                                              }
+                                            }
+                                          : null,
+                                      borderRadius: BorderRadius.circular(16),
+                                      child: Center(
+                                        child: Icon(
+                                          _isRecordingVideo
+                                              ? Icons.stop_rounded
+                                              : Icons.videocam_outlined,
+                                          color: Colors.white,
+                                          size: 24,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                          SizedBox(width: w * 0.03),
-                          ActionIconButton(
-                            icon: _isRecordingVideo ? Icons.stop : Icons.videocam,
-                            tooltip: _isRecordingVideo
-                                ? 'Stop Video'
-                                : 'Record Video',
-                            active: !_isRecordingAudio && _audioPath == null,
-                            onTap: () async {
-                              if (_isRecordingVideo) {
-                                await _stopVideoRecording();
-                              } else {
-                                await _startVideoRecording();
-                              }
-                            },
-                          ),
-                          const Spacer(),
+                          const SizedBox(width: 16),
                           SizedBox(
-                            width: w * 0.46,
+                            width: w * 0.6,
                             child: GradientNextButton(
                               enabled: nextEnabled,
                               onPressed: nextEnabled
