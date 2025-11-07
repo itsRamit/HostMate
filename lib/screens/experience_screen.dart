@@ -190,12 +190,11 @@ class _ExperienceSelectionScreenState
                         TextField(
                           controller: _controller,
                           onChanged: (_) => setState(() {}),
-                          maxLines: 4,
+                          maxLines: 10,
                           maxLength: 250,
                           style: AppTextStyles.bodyMRegular,
                           decoration: const InputDecoration(
-                            hintText: 'Describe your perfect hotspot',
-                            prefixText: '/ ',
+                            hintText: '/ Describe your perfect hotspot',
                           ),
                         ),
 
