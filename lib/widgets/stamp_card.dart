@@ -80,7 +80,7 @@ class StampCard extends StatelessWidget {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                // ✨ Reliable grayscale: swap between two trees
+                
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 220),
                   switchInCurve: Curves.easeOut,
