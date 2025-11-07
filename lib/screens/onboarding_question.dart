@@ -6,14 +6,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:video_player/video_player.dart';
+import 'package:audio_waveforms/audio_waveforms.dart';
 import '../provider/onboarding_provider.dart';
 import '../theme.dart';
 import '../widgets/recording_bar.dart';
 import '../widgets/video_playback_card.dart';
 import '../widgets/video_recording_preview.dart';
-import '../widgets/action_icon_button.dart';
 import '../widgets/stepper_bar.dart';
-import 'package:audio_waveforms/audio_waveforms.dart';
 import 'experience_screen.dart';
 
 class OnboardingQuestionScreen extends ConsumerStatefulWidget {
@@ -31,6 +30,7 @@ class _OnboardingQuestionScreenState
   late final PlayerController _player;
   bool _isRecordingAudio = false;
   bool _isAudioPlaying = false;
+  bool _showOnlyNext = false;
   String? _audioPath;
   int _elapsedMs = 0;
   Timer? _ticker;
@@ -93,7 +93,10 @@ class _OnboardingQuestionScreenState
       );
     }
     if (!mounted) return;
-    setState(() => _isRecordingAudio = false);
+    setState(() {
+      _isRecordingAudio = false;
+      _showOnlyNext = true; // trigger animation on stop
+    });
     ref.read(onboardingProvider.notifier).setAudioPath(_audioPath);
   }
 
@@ -123,6 +126,7 @@ class _OnboardingQuestionScreenState
       _isRecordingAudio = false;
       _isAudioPlaying = false;
       _elapsedMs = 0;
+      _showOnlyNext = false; // revert animation
     });
     ref.read(onboardingProvider.notifier).setAudioPath(null);
   }
@@ -157,9 +161,8 @@ class _OnboardingQuestionScreenState
     final ctrl = _cameraController;
     if (ctrl == null ||
         !ctrl.value.isInitialized ||
-        !ctrl.value.isRecordingVideo) {
+        !ctrl.value.isRecordingVideo)
       return;
-    }
     final xfile = await ctrl.stopVideoRecording();
     final dir = await getTemporaryDirectory();
     final name = 'video_${DateTime.now().millisecondsSinceEpoch}.mp4';
@@ -173,6 +176,7 @@ class _OnboardingQuestionScreenState
     setState(() {
       _isRecordingVideo = false;
       _videoPath = dest;
+      _showOnlyNext = true; // trigger animation on stop
     });
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       try {
@@ -202,6 +206,7 @@ class _OnboardingQuestionScreenState
       _videoPath = null;
       _videoPlayer = null;
       _isRecordingVideo = false;
+      _showOnlyNext = false; // revert animation
     });
     ref.read(onboardingProvider.notifier).setVideoPath(null);
   }
@@ -215,6 +220,9 @@ class _OnboardingQuestionScreenState
   Widget build(BuildContext context) {
     final hasTyped = _questionCtrl.text.trim().isNotEmpty;
     final nextEnabled = hasTyped;
+    final w = MediaQuery.of(context).size.width;
+    final h = MediaQuery.of(context).size.height;
+
     return Scaffold(
       backgroundColor: AppColors.base2,
       appBar: AppBar(
@@ -224,7 +232,7 @@ class _OnboardingQuestionScreenState
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const StepperBar(progress: 0.66,),
+        title: const StepperBar(progress: 0.66),
         centerTitle: true,
         actions: [
           IconButton(
@@ -236,8 +244,6 @@ class _OnboardingQuestionScreenState
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final h = constraints.maxHeight;
-            final w = MediaQuery.of(context).size.width;
             final bottomInset = MediaQuery.of(context).viewInsets.bottom;
             return SingleChildScrollView(
               reverse: true,
@@ -247,7 +253,9 @@ class _OnboardingQuestionScreenState
                 bottom: bottomInset + 16,
               ),
               child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: h),
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight - bottomInset,
+                ),
                 child: IntrinsicHeight(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.end,
@@ -299,95 +307,137 @@ class _OnboardingQuestionScreenState
                           onDelete: _deleteVideo,
                         ),
                       const SizedBox(height: 20),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Container(
-                              height: h*0.08,
-                              decoration: BoxDecoration(
-                                color: AppColors.surfaceBlack2,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                  color: AppColors.border3,
-                                  width: 1,
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: InkWell(
-                                      onTap:
-                                          (!_isRecordingVideo &&
-                                              _videoPath == null)
-                                          ? () async {
-                                              if (_isRecordingAudio) {
-                                                await _stopAudioRecording();
-                                              } else {
-                                                await _startAudioRecording();
-                                              }
+                      AnimatedSize(
+                        duration: const Duration(milliseconds: 600),
+                        curve: Curves.easeInOutCubic,
+                        child: AnimatedOpacity(
+                          duration: const Duration(milliseconds: 450),
+                          curve: Curves.easeInOut,
+                          opacity: 1,
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 550),
+                            switchInCurve: Curves.easeOutCubic,
+                            switchOutCurve: Curves.easeInCubic,
+                            child: _showOnlyNext
+                                ? SizedBox(
+                                    key: const ValueKey('next'),
+                                    width: double.infinity,
+                                    height: h * 0.08,
+                                    child: GradientNextButton(
+                                      enabled: nextEnabled,
+                                      onPressed: nextEnabled
+                                          ? () {
+                                              debugPrint(
+                                                'Q: ${_questionCtrl.text}',
+                                              );
+                                              debugPrint('Audio: $_audioPath');
+                                              debugPrint('Video: $_videoPath');
                                             }
                                           : null,
-                                      borderRadius: BorderRadius.circular(16),
-                                      child: Center(
-                                        child: Icon(
-                                          _isRecordingAudio
-                                              ? Icons.stop_rounded
-                                              : Icons.mic_none_rounded,
-                                          color: Colors.white,
-                                          size: 24,
+                                    ),
+                                  )
+                                : Row(
+                                    key: const ValueKey('actions'),
+                                    children: [
+                                      Expanded(
+                                        child: Container(
+                                          height: h * 0.08,
+                                          decoration: BoxDecoration(
+                                            color: AppColors.surfaceBlack2,
+                                            borderRadius: BorderRadius.circular(
+                                              16,
+                                            ),
+                                            border: Border.all(
+                                              color: AppColors.border3,
+                                              width: 1,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Expanded(
+                                                child: InkWell(
+                                                  onTap:
+                                                      (!_isRecordingVideo &&
+                                                          _videoPath == null)
+                                                      ? () async {
+                                                          if (_isRecordingAudio) {
+                                                            await _stopAudioRecording();
+                                                          } else {
+                                                            await _startAudioRecording();
+                                                          }
+                                                        }
+                                                      : null,
+                                                  borderRadius:
+                                                      BorderRadius.circular(16),
+                                                  child: Center(
+                                                    child: Icon(
+                                                      _isRecordingAudio
+                                                          ? Icons.stop_rounded
+                                                          : Icons
+                                                                .mic_none_rounded,
+                                                      color: Colors.white,
+                                                      size: 24,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                              Container(
+                                                width: 1,
+                                                height: 24,
+                                                color: Colors.white.withOpacity(
+                                                  0.2,
+                                                ),
+                                              ),
+                                              Expanded(
+                                                child: InkWell(
+                                                  onTap:
+                                                      (!_isRecordingAudio &&
+                                                          _audioPath == null)
+                                                      ? () async {
+                                                          if (_isRecordingVideo) {
+                                                            await _stopVideoRecording();
+                                                          } else {
+                                                            await _startVideoRecording();
+                                                          }
+                                                        }
+                                                      : null,
+                                                  borderRadius:
+                                                      BorderRadius.circular(16),
+                                                  child: Center(
+                                                    child: Icon(
+                                                      _isRecordingVideo
+                                                          ? Icons.stop_rounded
+                                                          : Icons
+                                                                .videocam_outlined,
+                                                      color: Colors.white,
+                                                      size: 24,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  ),
-                                  Container(
-                                    width: 1,
-                                    height: 24,
-                                    color: Colors.white.withOpacity(0.2),
-                                  ),
-                                  Expanded(
-                                    child: InkWell(
-                                      onTap:
-                                          (!_isRecordingAudio &&
-                                              _audioPath == null)
-                                          ? () async {
-                                              if (_isRecordingVideo) {
-                                                await _stopVideoRecording();
-                                              } else {
-                                                await _startVideoRecording();
-                                              }
-                                            }
-                                          : null,
-                                      borderRadius: BorderRadius.circular(16),
-                                      child: Center(
-                                        child: Icon(
-                                          _isRecordingVideo
-                                              ? Icons.stop_rounded
-                                              : Icons.videocam_outlined,
-                                          color: Colors.white,
-                                          size: 24,
+                                      const SizedBox(width: 16),
+                                      SizedBox(
+                                        width: w * 0.6,
+                                        height: h * 0.08,
+                                        child: GradientNextButton(
+                                          enabled: nextEnabled,
+                                          onPressed: nextEnabled
+                                              ? () {
+                                                  debugPrint(
+                                                    'Q: ${_questionCtrl.text}',
+                                                  );
+                                                }
+                                              : null,
                                         ),
                                       ),
-                                    ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                            ),
                           ),
-                          const SizedBox(width: 16),
-                          SizedBox(
-                            width: w * 0.6,
-                            child: GradientNextButton(
-                              enabled: nextEnabled,
-                              onPressed: nextEnabled
-                                  ? () {
-                                      debugPrint('Q: ${_questionCtrl.text}');
-                                      debugPrint('Audio: $_audioPath');
-                                      debugPrint('Video: $_videoPath');
-                                    }
-                                  : null,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ],
                   ),
